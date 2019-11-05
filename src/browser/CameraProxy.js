@@ -28,14 +28,16 @@ function takePicture (success, error, opts) {
         var input = document.createElement('input');
         var parent = document.createElement('div');
         var modal = document.createElement('div');
+        var buttons = document.createElement('div');
         var cancel = document.createElement('button');
         cancel.innerHTML = 'Cancel';
         // parent.style.position = 'relative';
         parent.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
         parent.className = 'cordova-camera-capture-div';
         modal.className = 'cordova-camera-capture-modal'
+        buttons.appendChild(cancel);
         modal.appendChild(input);
-        modal.appendChild(cancel);
+        modal.appendChild(buttons);
         parent.appendChild(modal);
         input.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
         input.className = 'cordova-camera-select';
@@ -68,13 +70,19 @@ function capture (success, errorCallback, opts) {
     var targetWidth = opts[3];
     var targetHeight = opts[4];
 
+    if (targetWidth === 1024 && targetHeight === 1024 ) {
+        targetHeight = 768;    
+    }
+
     targetWidth = targetWidth === -1 ? 320 : targetWidth;
     targetHeight = targetHeight === -1 ? 240 : targetHeight;
 
+    
     var video = document.createElement('video');
     var button = document.createElement('button');
     var parent = document.createElement('div');
     var modal = document.createElement('div');
+    var buttons = document.createElement('div');
     var cancel = document.createElement('button');
     cancel.innerHTML = 'Cancel';
     //parent.style.position = 'relative';
@@ -83,11 +91,17 @@ function capture (success, errorCallback, opts) {
     modal.className = 'cordova-camera-capture-video-modal'
     parent.appendChild(modal);
     modal.appendChild(video);
-    modal.appendChild(button);
-    modal.appendChild(cancel);
+    buttons.appendChild(button);
+    buttons.appendChild(cancel);
+    modal.appendChild(buttons);
+    // use 10% modal; padding widht and 10 paddint
+    video.width = targetWidth > document.body.clientWidth ? (document.body.clientWidth - 10 - (0.1 * document.body.clientWidth)) : targetWidth;
+    video.height = targetWidth > document.body.clientWidth ?  (document.body.clientWidth - 10 - (0.1 * document.body.clientWidth)) / 1.33 : targetHeight;
+    if (video.height > (window.innerHeight - 80 - (0.1 * window.innerHeight)) ) {
+        video.height = (window.innerHeight - 80 - (0.1 * window.innerHeight)) 
+    }
 
-    video.width = targetWidth > document.body.clientWidth ? document.body.clientWidth - 10 : targetWidth;
-    video.height = targetWidth > document.body.clientWidth ?  document.body.clientWidth - 10 : targetHeight;
+    video.style.width = video.width + 'px';    
     button.innerHTML = 'Capture!';
 
     button.onclick = function () {
