@@ -26,7 +26,17 @@ function takePicture (success, error, opts) {
         capture(success, error, opts);
     } else {
         var input = document.createElement('input');
-        input.style.position = 'relative';
+        var parent = document.createElement('div');
+        var modal = document.createElement('div');
+        var cancel = document.createElement('button');
+        cancel.innerHTML = 'Cancel';
+        // parent.style.position = 'relative';
+        parent.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
+        parent.className = 'cordova-camera-capture-div';
+        modal.className = 'cordova-camera-capture-modal'
+        modal.appendChild(input);
+        modal.appendChild(cancel);
+        parent.appendChild(modal);
         input.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
         input.className = 'cordova-camera-select';
         input.type = 'file';
@@ -35,7 +45,7 @@ function takePicture (success, error, opts) {
         input.onchange = function (inputEvent) {
             var reader = new FileReader(); /* eslint no-undef : 0 */
             reader.onload = function (readerEvent) {
-                input.parentNode.removeChild(input);
+                parent.parentNode.removeChild(parent);
 
                 var imageData = readerEvent.target.result;
 
@@ -44,8 +54,12 @@ function takePicture (success, error, opts) {
 
             reader.readAsDataURL(inputEvent.target.files[0]);
         };
+        cancel.onclick = function () {
+            parent.parentNode.removeChild(parent);
+            return;
+        };
 
-        document.body.appendChild(input);
+        document.body.appendChild(parent);
     }
 }
 
@@ -60,14 +74,20 @@ function capture (success, errorCallback, opts) {
     var video = document.createElement('video');
     var button = document.createElement('button');
     var parent = document.createElement('div');
-    parent.style.position = 'relative';
+    var modal = document.createElement('div');
+    var cancel = document.createElement('button');
+    cancel.innerHTML = 'Cancel';
+    //parent.style.position = 'relative';
     parent.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
-    parent.className = 'cordova-camera-capture';
-    parent.appendChild(video);
-    parent.appendChild(button);
+    parent.className = 'cordova-camera-capture-div';
+    modal.className = 'cordova-camera-capture-video-modal'
+    parent.appendChild(modal);
+    modal.appendChild(video);
+    modal.appendChild(button);
+    modal.appendChild(cancel);
 
-    video.width = targetWidth;
-    video.height = targetHeight;
+    video.width = targetWidth > document.body.clientWidth ? document.body.clientWidth - 10 : targetWidth;
+    video.height = targetWidth > document.body.clientWidth ?  document.body.clientWidth - 10 : targetHeight;
     button.innerHTML = 'Capture!';
 
     button.onclick = function () {
@@ -94,7 +114,10 @@ function capture (success, errorCallback, opts) {
 
         return success(imageData);
     };
-
+    cancel.onclick = function () {
+        parent.parentNode.removeChild(parent);
+        return;
+    }
     navigator.getUserMedia = navigator.getUserMedia ||
                              navigator.webkitGetUserMedia ||
                              navigator.mozGetUserMedia ||
