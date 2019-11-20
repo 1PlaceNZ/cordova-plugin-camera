@@ -129,6 +129,11 @@ function capture (success, errorCallback, opts) {
                 track.stop();
             });
         }
+        if ('srcObject' in video) {
+            video.srcObject = null;
+        } else {
+            video.src = null;
+        }
         parent.parentNode.removeChild(parent);
 
         return success(imageData);
@@ -209,6 +214,9 @@ function capture (success, errorCallback, opts) {
             })
             .catch(function(err) {
                 console.log(err);
+                if (err.name =="NotReadableError") {
+                    alert(err.message + '. Please close your other apps that might be using the camera');
+                }
                 if (errorCallback) {
                     errorCallback(err)
                 }
