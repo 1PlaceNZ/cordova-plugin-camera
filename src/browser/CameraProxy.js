@@ -71,19 +71,21 @@ function capture (success, errorCallback, opts) {
     var targetHeight = opts[4];
 
     if (targetWidth === 1024 && targetHeight === 1024 ) {
-        targetHeight = 768;    
+        targetHeight = 768;
     }
 
     targetWidth = targetWidth === -1 ? 320 : targetWidth;
     targetHeight = targetHeight === -1 ? 240 : targetHeight;
 
-    
+
     var video = document.createElement('video');
     var button = document.createElement('button');
     var parent = document.createElement('div');
     var modal = document.createElement('div');
     var buttons = document.createElement('div');
     var cancel = document.createElement('button');
+    var select = document.createElement('select');
+    var selectButton = document.createElement('button');
     cancel.innerHTML = 'Cancel';
     //parent.style.position = 'relative';
     parent.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
@@ -91,19 +93,22 @@ function capture (success, errorCallback, opts) {
     modal.className = 'cordova-camera-capture-video-modal'
     parent.appendChild(modal);
     modal.appendChild(video);
+    buttons.appendChild(select);
+    buttons.appendChild(selectButton);
     buttons.appendChild(button);
     buttons.appendChild(cancel);
+
     modal.appendChild(buttons);
     // use 10% modal; padding widht and 10 paddint
     video.width = targetWidth > document.body.clientWidth ? (document.body.clientWidth - 10 - (0.1 * document.body.clientWidth)) : targetWidth;
     video.height = targetWidth > document.body.clientWidth ?  (document.body.clientWidth - 10 - (0.1 * document.body.clientWidth)) / 1.33 : targetHeight;
     if (video.height > (window.innerHeight - 80 - (0.1 * window.innerHeight)) ) {
-        video.height = (window.innerHeight - 80 - (0.1 * window.innerHeight)) 
+        video.height = (window.innerHeight - 80 - (0.1 * window.innerHeight))
     }
 
-    video.style.width = video.width + 'px';    
+    video.style.width = video.width + 'px';
     button.innerHTML = 'Capture!';
-
+    selectButton.innerHTML = 'Start Camera';
     button.onclick = function () {
         // create a canvas and capture a frame from video stream
         var canvas = document.createElement('canvas');
@@ -145,22 +150,75 @@ function capture (success, errorCallback, opts) {
             video.src = window.URL.createObjectURL(localMediaStream);
         }
         video.play();
-        document.body.appendChild(parent);
+
     };
 
-    if (navigator.getUserMedia) {
-        navigator.getUserMedia({video: true, audio: false}, successCallback, errorCallback);
-    } else if (navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({video: true, audio: false})
-        .then(function(stream) {
-          successCallback(stream);
-        })
-        .catch(function(err) {
-            conole.log(err);
-            if (errorCallback) {
-                errorCallback(err)
+    var gotDevices = function (mediaDevices) {
+        select.innerHTML = '';
+        select.appendChild(document.createElement('option'));
+        let count = 1;
+        mediaDevices.forEach(mediaDevice => {
+            if (mediaDevice.kind === 'videoinput') {
+                const option = document.createElement('option');
+                option.value = mediaDevice.deviceId;
+                const label = mediaDevice.label || `Camera ${count++}`;
+                const textNode = document.createTextNode(label);
+                option.appendChild(textNode);
+                select.appendChild(option);
             }
         });
+        document.body.appendChild(parent);
+    }
+
+    var stopMediaTracks= function(stream) {
+        stream.getTracks().forEach(track => {
+          track.stop();
+        });
+    }
+    selectButton.addEventListener('click', event => {
+        if (typeof localMediaStream !== 'undefined') {
+          stopMediaTracks(localMediaStream);
+        }
+        const videoConstraints = {};
+        if (select.value === '') {
+          videoConstraints.facingMode = 'environment';
+        } else {
+          videoConstraints.deviceId = { exact: select.value };
+        }
+
+        const constraints = {
+          video: videoConstraints,
+          audio: false
+        };
+        if (navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia(constraints)
+            .then(function(stream) {
+                successCallback(stream);
+            })
+            .catch(function(err) {
+                console.log(err);
+                if (errorCallback) {
+                    errorCallback(err)
+                }
+            });
+
+        } else if (navigator.getUserMedia) {
+            navigator.getUserMedia(constraints)
+            .then(function(stream) {
+                successCallback(stream);
+            })
+            .catch(function(err) {
+                console.log(err);
+                if (errorCallback) {
+                    errorCallback(err)
+                }
+            });
+        }
+    });
+    if (navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.enumerateDevices().then(gotDevices);
+    } else if (navigator.getUserMedia) {
+        navigator.mediaDevices.enumerateDevices().then(gotDevices);
     } else {
         alert('Browser does not support camera :(');
     }
