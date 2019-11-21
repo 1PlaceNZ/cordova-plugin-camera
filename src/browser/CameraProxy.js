@@ -134,11 +134,20 @@ function capture (success, errorCallback, opts) {
         } else {
             video.src = null;
         }
+
         parent.parentNode.removeChild(parent);
 
         return success(imageData);
     };
     cancel.onclick = function () {
+        if (typeof localMediaStream !== 'undefined') {
+            stopMediaTracks(localMediaStream);
+        }
+        if ('srcObject' in video) {
+            video.srcObject = null;
+        } else {
+            video.src = null;
+        }
         parent.parentNode.removeChild(parent);
         return;
     }
@@ -147,6 +156,18 @@ function capture (success, errorCallback, opts) {
                              navigator.mozGetUserMedia ||
                              navigator.msGetUserMedia;
 
+
+    var setupCallback = function (stream) {
+        navigator.mediaDevices.enumerateDevices().then(gotDevices);
+        localMediaStream = stream;
+        if ('srcObject' in video) {
+            video.srcObject = localMediaStream;
+        } else {
+            video.src = window.URL.createObjectURL(localMediaStream);
+        }
+        video.play();
+        document.body.appendChild(parent);
+    };
     var successCallback = function (stream) {
         localMediaStream = stream;
         if ('srcObject' in video) {
@@ -167,12 +188,13 @@ function capture (success, errorCallback, opts) {
                 const option = document.createElement('option');
                 option.value = mediaDevice.deviceId;
                 const label = mediaDevice.label || `Camera ${count++}`;
-                const textNode = document.createTextNode(label);
-                option.appendChild(textNode);
+                // const textNode = document.createTextNode(label);
+                // option.appendChild(textNode);
+                option.text = label;
                 select.appendChild(option);
             }
         });
-        document.body.appendChild(parent);
+
     }
 
     var stopMediaTracks= function(stream) {
@@ -214,9 +236,6 @@ function capture (success, errorCallback, opts) {
             })
             .catch(function(err) {
                 console.log(err);
-                if (err.name =="NotReadableError") {
-                    alert(err.message + '. Please close your other apps that might be using the camera');
-                }
                 if (errorCallback) {
                     errorCallback(err)
                 }
@@ -224,7 +243,18 @@ function capture (success, errorCallback, opts) {
         }
     });
     if (navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.enumerateDevices().then(gotDevices);
+        navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}, audio: false})
+        .then(function(stream) {
+            setupCallback(stream);
+        })
+        .catch(function(err) {
+            conole.log(err);
+            if (errorCallback) {
+                errorCallback(err)
+            }
+        })
+
+
     } else if (navigator.getUserMedia) {
         navigator.mediaDevices.enumerateDevices().then(gotDevices);
     } else {
