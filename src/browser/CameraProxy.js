@@ -94,12 +94,15 @@ function capture (success, errorCallback, opts) {
     var qHdButton = document.createElement('button');
     var hdButton = document.createElement('button');
     var fullHdButton = document.createElement('button');
+    var scrollButton = document.createElement('button')
+    var clientHeight;
 
     sizeDiv.appendChild(qvgaButton);
     sizeDiv.appendChild(vgaButton);
     sizeDiv.appendChild(qHdButton);
     sizeDiv.appendChild(hdButton);
     sizeDiv.appendChild(fullHdButton);
+    sizeDiv.appendChild(scrollButton);
 
     cancel.innerHTML = 'Cancel';
     //parent.style.position = 'relative';
@@ -131,6 +134,7 @@ function capture (success, errorCallback, opts) {
     qHdButton.innerHTML = 'qHD';
     hdButton.innerHTML = 'HD';
     fullHdButton.innerHTML = 'Full HD';
+    scrollButton.innerHTML = 'Allow Scolling'
 
     qvgaButton.onclick = function () {
         changeCamera(qvgaConstraints());
@@ -147,11 +151,14 @@ function capture (success, errorCallback, opts) {
     fullHdButton.onclick = function () {
         changeCamera(fullHdConstraints());
     }
+    scrollButton.onclick = function () {
+        document.querySelector('.cordova-camera-capture-video-modal').style.height= clientHeight + 'px';
+    }
     button.onclick = function () {
         // create a canvas and capture a frame from video stream
         var canvas = document.createElement('canvas');
-        canvas.width = video.clientWidth? video.clientWidth : targetWidth;
-        canvas.height = video.clientHeight? video.clientHeight : targetHeight;
+        canvas.width = video.videoWidth? video.videoWidth : video.clientWidth? client.clientWidth : targetWidth;
+        canvas.height = video.videoHeight? video.videoHeight : video.clientHeight? video.clientHeight : targetHeight;
         canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
 
         // convert image stored in canvas to base64 encoded image
@@ -231,6 +238,7 @@ function capture (success, errorCallback, opts) {
         localMediaStream = stream;
         displayVideo(stream);
         document.body.appendChild(parent);
+        clientHeight = document.querySelector('.cordova-camera-capture-video-modal').clientHeight;
     };
 
     var successCallback = function (stream) {
