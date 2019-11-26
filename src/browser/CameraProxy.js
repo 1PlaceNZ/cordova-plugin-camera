@@ -134,7 +134,7 @@ function capture (success, errorCallback, opts) {
     qHdButton.innerHTML = 'qHD';
     hdButton.innerHTML = 'HD';
     fullHdButton.innerHTML = 'Full HD';
-    scrollButton.innerHTML = 'Allow Scolling'
+    scrollButton.innerHTML = 'Allow Scrolling'
 
     qvgaButton.onclick = function () {
         changeCamera(qvgaConstraints());
@@ -152,8 +152,10 @@ function capture (success, errorCallback, opts) {
         changeCamera(fullHdConstraints());
     }
     scrollButton.onclick = function () {
+        clientHeight = window.innerHeight - 200;
         document.querySelector('.cordova-camera-capture-video-modal').style.height= clientHeight + 'px';
     }
+
     button.onclick = function () {
         // create a canvas and capture a frame from video stream
         var canvas = document.createElement('canvas');
@@ -238,7 +240,6 @@ function capture (success, errorCallback, opts) {
         localMediaStream = stream;
         displayVideo(stream);
         document.body.appendChild(parent);
-        clientHeight = document.querySelector('.cordova-camera-capture-video-modal').clientHeight;
     };
 
     var successCallback = function (stream) {
