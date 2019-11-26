@@ -318,12 +318,35 @@ function capture (success, errorCallback, opts) {
         })
         .catch(function(err) {
             console.log(err);
-            if (errorCallback) {
-                errorCallback(err)
+            if (err.name =='OverconstrainedError') {
+                navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: "environment" } })
+                .then(function(stream) {
+                    setupCallback(stream);
+                })
+            }else {
+                if (errorCallback) {
+                    errorCallback(err)
+                }
             }
         })
     } else if (navigator.getUserMedia) {
-        navigator.mediaDevices.enumerateDevices().then(gotDevices);
+        navigator.getUserMedia(qvgaConstraints())
+        .then(function(stream) {
+            setupCallback(stream);
+        })
+        .catch(function(err) {
+            console.log(err);
+            if (err.name =='OverconstrainedError') {
+                navigator.getUserMedia({ audio: false, video: { facingMode: "environment" } })
+                .then(function(stream) {
+                    setupCallback(stream);
+                })
+            }else {
+                if (errorCallback) {
+                    errorCallback(err)
+                }
+            }
+        })
     } else {
         console.log('Browser does not support camera :(');
         opts[2] = 2;
@@ -343,6 +366,48 @@ function isLandscape() {
         return window.innerWidth > window.innerHeight;
       }
 }
+
+
+function defaultConstraints() {
+    if (isLandscape()){
+        return {
+            video: {
+                facingMode: 'environment',
+                width: {
+                    min: 320,
+                    ideal:640
+                },
+                height: {
+                    min: 240,
+                    ideal:480
+                },
+                aspectRatio: { 
+                    ideal: 1.333333 
+                }
+            },
+            audio: false
+        }
+    } else {
+        return {
+            video: {
+                facingMode: 'environment',
+                width: {
+                    min: 240,
+                    ideal:480
+                },
+                height: {
+                    min: 320,
+                    ideal:640
+                },
+                aspectRatio: { 
+                    ideal: 0.75 
+                }
+            },
+            audio: false
+        }
+    }
+}
+
 
 function qvgaConstraints() {
     if (isLandscape()){
