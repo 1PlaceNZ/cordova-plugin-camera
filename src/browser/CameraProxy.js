@@ -355,16 +355,20 @@ function capture (success, errorCallback, opts) {
 }
 
 function isLandscape() {
-    var orientation = screen.msOrientation || screen.mozOrientation || (screen.orientation || {}).type;
-    if (orientation === "landscape-primary") {
+    if (screen.mozOrientation) {
         return true;
-      } else if (orientation === "landscape-secondary") {
-        return true;
-      } else if (orientation === "portrait-secondary" || orientation === "portrait-primary") {
-        return false;
-      } else if (orientation === undefined) {
-        return window.innerWidth > window.innerHeight;
-      }
+    } else {
+        var orientation = screen.msOrientation || screen.mozOrientation || (screen.orientation || {}).type;
+        if (orientation === "landscape-primary") {
+            return true;
+        } else if (orientation === "landscape-secondary") {
+            return true;
+        } else if (orientation === "portrait-secondary" || orientation === "portrait-primary") {
+            return false;
+        } else if (orientation === undefined) {
+            return window.innerWidth > window.innerHeight;
+        }
+    }
 }
 
 
